@@ -208,9 +208,19 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Global variables for Firebase config and app ID (provided by Canvas environment)
+        const firebaseConfig = {
+          apiKey: "AIzaSyADUiWVYdbJGUdNoO_0ZOhL96r_BJLFQFM",
+          authDomain: "nhap-du-lieu-bang-giong-noi.firebaseapp.com",
+          projectId: "nhap-du-lieu-bang-giong-noi",
+          storageBucket: "nhap-du-lieu-bang-giong-noi.firebasestorage.app",
+          messagingSenderId: "63795110565",
+          appId: "1:63795110565:web:34c8b6aea7a5d535a0a34c",
+          measurementId: "G-S3N7J8NVT1"
+};
+
+
+        
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
         let app, db, auth, userId;
@@ -447,4 +457,4 @@
     </script>
 </body>
 </html>
-Rename to index.html
+Rename to index.html, đã thêm vào phần Add Firebase config
