@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ứng dụng nhập liệu bằng giọng nói</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            box-sizing: border-box;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            color: #333;
+            transition: border-color 0.2s ease-in-out;
+        }
+        input[type="text"]:focus,
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #6366f1; /* Indigo-500 */
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background-color: #6366f1; /* Indigo-500 */
+            color: #ffffff;
+        }
+        .btn-primary:hover {
+            background-color: #4f46e5; /* Indigo-600 */
+            transform: translateY(-1px);
+        }
+        .btn-secondary {
+            background-color: #e0e7ff; /* Indigo-100 */
+            color: #4f46e5; /* Indigo-600 */
+        }
+        .btn-secondary:hover {
+            background-color: #c7d2fe; /* Indigo-200 */
+            transform: translateY(-1px);
+        }
+        .btn-danger {
+            background-color: #ef4444; /* Red-500 */
+            color: #ffffff;
+        }
+        .btn-danger:hover {
+            background-color: #dc2626; /* Red-600 */
+            transform: translateY(-1px);
+        }
+        .message-box {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: #fff;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+        .message-box.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .status-indicator {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #555;
+            text-align: center;
+        }
+        .status-indicator.recording {
+            color: #ef4444; /* Red-500 */
+            font-weight: 600;
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+        .loading-overlay.show {
+            visibility: visible;
+            opacity: 1;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-top: 4px solid #6366f1;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-8">Nhập liệu bằng giọng nói</h1>
+
+        <div class="form-group">
+            <label for="fullName">Họ và tên:</label>
+            <input type="text" id="fullName" placeholder="Ví dụ: Phan Bảo Long" class="rounded-lg">
+        </div>
+
+        <div class="form-group">
+            <label for="age">Độ tuổi:</label>
+            <input type="number" id="age" placeholder="Ví dụ: 40" class="rounded-lg">
+        </div>
+
+        <div class="form-group">
+            <label for="weight">Cân nặng:</label>
+            <input type="number" id="weight" placeholder="Ví dụ: 65" class="rounded-lg">
+        </div>
+
+        <div class="form-group">
+            <label for="height">Chiều cao:</label>
+            <input type="text" id="height" placeholder="Ví dụ: 1.7" class="rounded-lg">
+        </div>
+
+        <div class="flex flex-col sm:flex-row justify-center gap-4 mt-6">
+            <button id="startRecognition" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clip-rule="evenodd" />
+                </svg>
+                Bắt đầu ghi âm
+            </button>
+            <button id="stopRecognition" class="btn btn-danger" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+                Dừng ghi âm
+            </button>
+            <button id="saveData" class="btn btn-secondary">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7z" />
+                    <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                </svg>
+                Lưu dữ liệu
+            </button>
+        </div>
+
+        <div id="status" class="status-indicator"></div>
+    </div>
+
+    <div id="messageBox" class="message-box"></div>
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global variables for Firebase config and app ID (provided by Canvas environment)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let app, db, auth, userId;
+        let recognition;
+        let isRecognizing = false;
+        let authReady = false;
+
+        const fullNameInput = document.getElementById('fullName');
+        const ageInput = document.getElementById('age');
+        const weightInput = document.getElementById('weight');
+        const heightInput = document.getElementById('height');
+        const startRecognitionBtn = document.getElementById('startRecognition');
+        const stopRecognitionBtn = document.getElementById('stopRecognition');
+        const saveDataBtn = document.getElementById('saveData');
+        const statusDiv = document.getElementById('status');
+        const messageBox = document.getElementById('messageBox');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+
+        // Function to show messages to the user
+        function showMessage(message, duration = 3000) {
+            messageBox.textContent = message;
+            messageBox.classList.add('show');
+            setTimeout(() => {
+                messageBox.classList.remove('show');
+            }, duration);
+        }
+
+        // Function to show/hide loading overlay
+        function showLoading(show) {
+            if (show) {
+                loadingOverlay.classList.add('show');
+            } else {
+                loadingOverlay.classList.remove('show');
+            }
+        }
+
+        // Initialize Firebase and set up authentication
+        async function initializeFirebase() {
+            try {
+                if (Object.keys(firebaseConfig).length === 0) {
+                    showMessage("Lỗi: Cấu hình Firebase không được cung cấp. Vui lòng kiểm tra môi trường.");
+                    console.error("Firebase config is not provided.");
+                    return;
+                }
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        console.log("Người dùng đã đăng nhập:", userId);
+                        authReady = true;
+                        statusDiv.textContent = `Người dùng hiện tại: ${userId}`;
+                        // You can now safely perform Firestore operations
+                    } else {
+                        console.log("Không có người dùng nào đăng nhập. Đăng nhập ẩn danh...");
+                        try {
+                            if (initialAuthToken) {
+                                await signInWithCustomToken(auth, initialAuthToken);
+                            } else {
+                                await signInAnonymously(auth);
+                            }
+                        } catch (error) {
+                            console.error("Lỗi khi đăng nhập ẩn danh:", error);
+                            showMessage("Lỗi khi đăng nhập: " + error.message);
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error("Lỗi khi khởi tạo Firebase:", error);
+                showMessage("Lỗi khi khởi tạo Firebase: " + error.message);
+            }
+        }
+
+        // Initialize Web Speech API
+        function initializeSpeechRecognition() {
+            if (!('webkitSpeechRecognition' in window)) {
+                showMessage("Trình duyệt của bạn không hỗ trợ API Nhận dạng giọng nói. Vui lòng sử dụng Chrome.");
+                return;
+            }
+
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = true; // Continuous recognition
+            recognition.interimResults = true; // Get interim results
+            recognition.lang = 'vi-VN'; // Set language to Vietnamese
+
+            recognition.onstart = () => {
+                isRecognizing = true;
+                startRecognitionBtn.disabled = true;
+                stopRecognitionBtn.disabled = false;
+                statusDiv.textContent = "Đang ghi âm... Hãy nói rõ ràng.";
+                statusDiv.classList.add('recording');
+                console.log("Bắt đầu nhận dạng giọng nói...");
+            };
+
+            recognition.onresult = (event) => {
+                let interimTranscript = '';
+                let finalTranscript = '';
+
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript;
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+
+                console.log("Kết quả tạm thời:", interimTranscript);
+                console.log("Kết quả cuối cùng:", finalTranscript);
+
+                if (finalTranscript) {
+                    processVoiceInput(finalTranscript);
+                }
+            };
+
+            recognition.onerror = (event) => {
+                isRecognizing = false;
+                startRecognitionBtn.disabled = false;
+                stopRecognitionBtn.disabled = true;
+                statusDiv.textContent = "Lỗi ghi âm.";
+                statusDiv.classList.remove('recording');
+                console.error("Lỗi nhận dạng giọng nói:", event.error);
+                showMessage("Lỗi ghi âm: " + event.error);
+            };
+
+            recognition.onend = () => {
+                isRecognizing = false;
+                startRecognitionBtn.disabled = false;
+                stopRecognitionBtn.disabled = true;
+                statusDiv.textContent = "Ghi âm đã dừng.";
+                statusDiv.classList.remove('recording');
+                console.log("Nhận dạng giọng nói đã dừng.");
+            };
+        }
+
+        // Process the recognized voice input
+        function processVoiceInput(text) {
+            const lowerText = text.toLowerCase();
+            console.log("Đang xử lý văn bản:", lowerText);
+
+            let nameMatch = lowerText.match(/(tên|tên là)\s*([a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚŨĐàáâãèéêìíòóôõùúũđ\s]+)(?:,|$)/);
+            let ageMatch = lowerText.match(/(tuổi)\s*(\d+)/);
+            let weightMatch = lowerText.match(/(nặng)\s*(\d+)\s*(kg|kí)?/);
+            let heightMatch = lowerText.match(/(cao)\s*(\d+[\.,]?\d*)\s*(m|mét)?/);
+
+            if (nameMatch && nameMatch[2]) {
+                // Capitalize first letter of each word for name
+                const name = nameMatch[2].trim().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                fullNameInput.value = name;
+            }
+            if (ageMatch && ageMatch[2]) {
+                ageInput.value = parseInt(ageMatch[2], 10);
+            }
+            if (weightMatch && weightMatch[2]) {
+                weightInput.value = parseInt(weightMatch[2], 10);
+            }
+            if (heightMatch && heightMatch[2]) {
+                // Replace comma with dot for decimal
+                let height = heightMatch[2].replace(',', '.');
+                heightInput.value = parseFloat(height);
+            }
+
+            showMessage("Đã điền thông tin từ giọng nói.");
+        }
+
+        // Clear the form fields
+        function clearForm() {
+            fullNameInput.value = '';
+            ageInput.value = '';
+            weightInput.value = '';
+            heightInput.value = '';
+            showMessage("Biểu mẫu đã được làm trống.");
+        }
+
+        // Save data to Firestore
+        async function saveData() {
+            if (!authReady || !userId) {
+                showMessage("Đang xác thực, vui lòng thử lại sau.");
+                console.error("Firebase Auth not ready or userId not available.");
+                return;
+            }
+
+            const data = {
+                fullName: fullNameInput.value,
+                age: parseInt(ageInput.value, 10) || null,
+                weight: parseInt(weightInput.value, 10) || null,
+                height: parseFloat(heightInput.value) || null,
+                timestamp: new Date(),
+                userId: userId // Store userId for private data
+            };
+
+            if (!data.fullName) {
+                showMessage("Vui lòng nhập Họ và tên.");
+                return;
+            }
+
+            showLoading(true);
+            try {
+                // Store private data for the user
+                const userDocRef = collection(db, `artifacts/${appId}/users/${userId}/voice_entries`);
+                await addDoc(userDocRef, data);
+                showMessage("Dữ liệu đã được lưu thành công!");
+                clearForm(); // Clear form after successful save
+            } catch (e) {
+                console.error("Lỗi khi thêm tài liệu: ", e);
+                showMessage("Lỗi khi lưu dữ liệu: " + e.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Event Listeners
+        startRecognitionBtn.addEventListener('click', () => {
+            if (recognition && !isRecognizing) {
+                recognition.start();
+            }
+        });
+
+        stopRecognitionBtn.addEventListener('click', () => {
+            if (recognition && isRecognizing) {
+                recognition.stop();
+            }
+        });
+
+        saveDataBtn.addEventListener('click', saveData);
+
+        // Initialize everything on window load
+        window.onload = () => {
+            initializeFirebase();
+            initializeSpeechRecognition();
+        };
+    </script>
+</body>
+</html>
