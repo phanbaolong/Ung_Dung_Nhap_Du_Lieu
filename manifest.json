@@ -1,0 +1,20 @@
+{
+  "name": "Nhập liệu giọng nói",
+  "short_name": "VoiceEntry",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f0f2f5",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "https://phanbaolong.github.io/Ung_Dung_Nhap_Du_Lieu/your_logo_192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://phanbaolong.github.io/Ung_Dung_Nhap_Du_Lieu/your_logo_512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
